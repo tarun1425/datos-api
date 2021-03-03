@@ -1,0 +1,103 @@
+
+router.post('/filterData', (req, res, next) => {
+  
+  console.log('This is data : ', req.body);
+
+  var allVal = [];
+
+  function buildConditions(params) {
+    var conditions = [];
+    var values = [];
+    var conditionsStr;
+
+  
+    if (typeof params.industry != 'undefined') {
+      conditions.push("LI_industry LIKE ?");
+      values.push("%" + params.industry + "%");
+    }
+
+    if (typeof params.title != 'undefined') {
+      conditions.push("job_title LIKE ?");
+      values.push("%" + params.title + "%");
+    }
+
+    if (typeof params.employeeSize != 'undefined') {
+      conditions.push("emp_range LIKE ?");
+      values.push("%" + params.employeeSize + "%");
+    }
+    
+    if (typeof params.naicsCode != 'undefined') {
+      conditions.push("naics_code LIKE ?");
+      values.push("%" + params.naicsCode + "%");
+    }
+    
+    if (typeof params.sicCode != 'undefined') {
+      conditions.push("sic_code LIKE ?");
+      values.push("%" + params.sicCode + "%");
+    }
+
+    return {
+      where: conditions.length ?
+        conditions.join(' and ') : '1',
+      values: values
+    };
+  }
+
+  // for country
+  function countryConditions(params) {
+    var conditions = [];
+    var values = [];
+    var conditionsStr;
+      
+    for (const country of params.country) {
+      if (typeof params.country != 'undefined') {
+          conditions.push("contact.Country LIKE ?");
+          values.push("%" + country + "%");
+          allVal.push("%" + country + "%");
+      }
+    }
+
+    return {
+      where: conditions.length ?
+      '('.concat(conditions.join(' or ')).concat(')') : '',
+      values: values
+    };
+  }
+
+  // for industry
+  function industryConditions(params) {
+    var conditions = [];
+    var values = [];
+    var conditionsStr;
+
+    for (const industry of params.industry) {
+      if (typeof params.country != 'undefined') {
+          conditions.push("LI_industry LIKE ?");
+          values.push("%" + industry + "%");
+          allVal.push("%" + industry + "%");
+      }
+    }
+
+    return {
+      where: conditions.length ?
+      '('.concat(conditions.join(' or ')).concat(')') : '',
+      values: values
+    };
+  }
+
+
+  var conditions = buildConditions(req.body);
+  var countryChack = countryConditions(req.body);
+  var industryCheck = industryConditions(req.body);
+
+  sql = 'select first_name, last_name, job_title ,company_name, website, email_address,contact.work_phone, contact.address_l1, contact.city, contact.State, contact.Zip_code, contact.Country, emp_range, LI_industry, vv_disposition, qa_reason, LI_link, LI_company_link from contact inner join company on contact.c_id = company.id inner join email on email.contact_id = contact.id inner join quality_check on quality_check.contact_id = contact.id WHERE ' + countryChack.where+ ' and ' +industryCheck.where + ' and ' + conditions.where + ` Limit ${req.body.limit}`;
+
+  console.log(sql);
+  
+  console.log('//////////////////////where condition/////////////////////////////'+ countryChack.where +'and'+ industryCheck.where + '///////////////////////////////////////'+countryChack.where.length);
+  console.log(allVal);
+  db.query(sql, countryChack.values.concat(conditions.values), (err, rows, fields) => {
+    if (err) throw err;
+    res.status(200).send(rows);
+  });
+});
