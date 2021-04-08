@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
-
+// controllers
 const countryCtrl = require('../controller/getCountry');
 const autoCompleteCtrl = require('../controller/autoComplete');
 const dataCountCtrl = require('../controller/dataCount');
+const accountListCtrl = require('../controller/accountList');
 
 var db = require('../models/db');
 
@@ -335,6 +336,10 @@ router.get('/getJobLevel', autoCompleteCtrl.getJobLevel);
 
 // get count 
 router.post('/getCount', dataCountCtrl.getCount);
+
+// For account list
+router.post('/getAL', accountListCtrl.getAL);
+router.post('/getCountAL', accountListCtrl.getCountAL);
 
 
 /**
